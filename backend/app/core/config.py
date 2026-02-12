@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # QR / Traceability
     PUBLIC_TRACE_URL: str = "https://nosvers.com/trace"
 
+    # CORS
+    CORS_ORIGINS: list[str] = ["http://localhost", "http://localhost:3000", "https://nosvers.com"]
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 
