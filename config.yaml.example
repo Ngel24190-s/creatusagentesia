@@ -1,0 +1,65 @@
+# NosVers Agent Ecosystem — Configuration
+# Copy this file to config.yaml and fill in your values.
+
+wordpress:
+  site_url: "https://nosvers.com"
+  api_user: "claude_nosvers"
+  api_password: "YOUR_APP_PASSWORD_HERE"
+  # LiteSpeed cache purge endpoint (if available)
+  litespeed_purge: true
+
+paths:
+  reports_dir: "reports"
+  logs_dir: "logs"
+  content_seeds_dir: "content_seeds"
+  shared_state: "shared_state.json"
+
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_file: "logs/nosvers_agents.log"
+
+# SEO keywords to enforce across content
+seo:
+  primary_keywords:
+    - "lombricompost"
+    - "LombriThé"
+    - "sol vivant"
+    - "Dordogne"
+    - "vers de terre"
+    - "engrais naturel"
+  brand_voice:
+    tone: "scientific, artisanal, honest, family, zero intermediary"
+    reference: "Dr. Elaine Ingham, Soil Food Web"
+    forbidden_phrases:
+      - "incroyable"
+      - "amazing"
+      - "magique"
+      - "révolutionnaire"
+
+# Optional: Social media scheduling
+social:
+  buffer_api_token: ""  # Leave empty to disable auto-scheduling
+  platforms:
+    - instagram
+    - facebook
+    - tiktok
+
+# Optional: Email notifications
+email:
+  enabled: false
+  smtp_host: ""
+  smtp_port: 587
+  smtp_user: ""
+  smtp_password: ""
+  from_address: ""
+  to_addresses:
+    - ""
+
+# Optional: n8n webhook
+n8n:
+  webhook_url: ""  # Leave empty to disable
+
+# Optional: Telegram bot
+telegram:
+  bot_token: ""
+  chat_id: ""

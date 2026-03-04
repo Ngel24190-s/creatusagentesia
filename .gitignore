@@ -1,0 +1,15 @@
+config.yaml
+__pycache__/
+*.pyc
+.env
+logs/*.log
+reports/*.md
+reports/*.json
+shared_state.json
+content_seeds/*.txt
+content_seeds/*.mp3
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
