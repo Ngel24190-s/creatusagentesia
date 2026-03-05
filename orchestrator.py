@@ -31,6 +31,7 @@ from agents.wp_client import WPClient
 from agents.agent_content import ContentGuardian
 from agents.agent_photos import PhotoManager
 from agents.agent_social import SocialMediaManager
+from agents.notifier import get_notifier
 
 logger = get_logger("orchestrator")
 
@@ -41,6 +42,7 @@ class Orchestrator:
     def __init__(self):
         self.config = load_config()
         self.wp = WPClient(self.config)
+        self.notifier = get_notifier(self.config)
 
     def test_connection(self) -> bool:
         """Test WordPress API connectivity and authentication."""
@@ -154,6 +156,9 @@ class Orchestrator:
         print("Run complete. Check reports/ for all outputs.")
         print("Review and approve in shared_state.json before applying changes.\n")
 
+        # Send Telegram notification
+        self.notifier.send_report_summary(state)
+
         logger.info("Full run complete")
 
     def generate_weekly_report(self) -> str:
@@ -238,6 +243,45 @@ class Orchestrator:
 
         return report_path
 
+    def apply_corrections(self):
+        """Apply all approved corrections (content + media)."""
+        logger.info("=" * 60)
+        logger.info("NosVers — Applying Approved Corrections")
+        logger.info("=" * 60)
+        print("\nApplying approved corrections...")
+
+        # Content corrections
+        print("\n[1/2] Content corrections...")
+        try:
+            content_agent = ContentGuardian(self.config)
+            content_agent.apply_corrections()
+            print("  Content corrections applied.")
+        except Exception as e:
+            logger.error(f"Content corrections failed: {e}")
+            print(f"  ERROR: {e}")
+
+        # Media alt text corrections
+        print("\n[2/2] Media alt text corrections...")
+        try:
+            photo_agent = PhotoManager(self.config)
+            photo_agent.apply_alt_texts()
+            print("  Media corrections applied.")
+        except Exception as e:
+            logger.error(f"Media corrections failed: {e}")
+            print(f"  ERROR: {e}")
+
+        # Purge cache
+        self.wp.purge_litespeed_cache()
+        print("\nCorrections applied. Re-run audit to verify.\n")
+
+    def send_status_notification(self):
+        """Send current ecosystem status via Telegram."""
+        state = load_state()
+        if self.notifier.send_report_summary(state):
+            print("Telegram notification sent.")
+        else:
+            print("Telegram notification not sent (check configuration).")
+
     def _email_report(self, report_path: str):
         """Send weekly report via email if SMTP is configured."""
         email_cfg = self.config.get("email", {})
@@ -286,10 +330,14 @@ Examples:
                         help="Run a specific agent")
     parser.add_argument("--report", action="store_true",
                         help="Generate weekly summary report")
+    parser.add_argument("--apply", action="store_true",
+                        help="Apply approved corrections to WordPress")
+    parser.add_argument("--notify", action="store_true",
+                        help="Send current status via Telegram")
 
     args = parser.parse_args()
 
-    if not any([args.test, args.run_all, args.agent, args.report]):
+    if not any([args.test, args.run_all, args.agent, args.report, args.apply, args.notify]):
         parser.print_help()
         sys.exit(0)
 
@@ -308,8 +356,14 @@ Examples:
     elif args.agent == "social":
         orch.run_social_generation()
 
+    if args.apply:
+        orch.apply_corrections()
+
     if args.report or args.run_all:
         orch.generate_weekly_report()
+
+    if args.notify:
+        orch.send_status_notification()
 
 
 if __name__ == "__main__":

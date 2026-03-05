@@ -273,6 +273,10 @@ class ContentGuardian:
     def apply_corrections(self):
         """Apply approved corrections from corrections_pending.json.
         Only runs when shared_state content_audit.status == 'approved'.
+
+        Applies grammar fixes by replacing error snippets in the original
+        WordPress content via the REST API. Brand drift and SEO issues
+        are logged but require manual intervention.
         """
         from agents.shared_state import load_state
         state = load_state()
@@ -280,9 +284,124 @@ class ContentGuardian:
             logger.warning("Content corrections not approved yet. Skipping apply.")
             return
 
-        logger.info("Applying approved content corrections is not yet implemented.")
-        logger.info("Manual review and application recommended for first runs.")
-        update_section("content_audit", status="applied")
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        json_path = os.path.join(
+            base_dir, self.config["paths"]["reports_dir"], "corrections_pending.json"
+        )
+
+        if not os.path.exists(json_path):
+            logger.warning("No corrections_pending.json found.")
+            return
+
+        with open(json_path, "r", encoding="utf-8") as f:
+            corrections = json.load(f)
+
+        if not corrections:
+            logger.info("No corrections to apply.")
+            update_section("content_audit", status="applied")
+            return
+
+        # Group corrections by URL and type for batch updates
+        by_url = {}
+        for c in corrections:
+            url = c.get("url", "")
+            by_url.setdefault(url, []).append(c)
+
+        # Fetch all content for ID resolution
+        content_map = {}
+        for fetcher, wp_type in [
+            (self.wp.get_pages, "page"),
+            (self.wp.get_posts, "post"),
+            (self.wp.get_products, "product"),
+        ]:
+            try:
+                items = fetcher()
+                for item in items:
+                    link = item.get("link", "")
+                    content_map[link] = {
+                        "id": item["id"],
+                        "wp_type": wp_type,
+                        "content": item.get("content", {}).get("rendered", ""),
+                    }
+            except Exception as e:
+                logger.error(f"Failed to fetch {wp_type}s for corrections: {e}")
+
+        applied = 0
+        skipped = 0
+        manual_needed = []
+
+        for url, issue_list in by_url.items():
+            if url not in content_map:
+                logger.warning(f"Cannot find WP item for URL: {url}")
+                skipped += len(issue_list)
+                continue
+
+            item_info = content_map[url]
+            item_id = item_info["id"]
+            wp_type = item_info["wp_type"]
+            current_content = item_info["content"]
+            modified_content = current_content
+
+            for issue in issue_list:
+                issue_type = issue.get("issue_type", "")
+
+                if issue_type == "grammar":
+                    # Apply grammar fix: replace the error with the first suggestion
+                    suggestions = issue.get("suggestion", [])
+                    original = issue.get("original", "")
+                    if suggestions and original:
+                        # The original is a snippet with context; find the actual error
+                        # by matching the snippet in content
+                        first_fix = suggestions[0] if isinstance(suggestions, list) else suggestions
+                        if original in modified_content:
+                            modified_content = modified_content.replace(original, first_fix, 1)
+                            applied += 1
+                            logger.info(f"Applied grammar fix on {url}: '{original[:40]}...' → '{first_fix[:40]}...'")
+                        else:
+                            logger.debug(f"Snippet not found in content for {url}, skipping")
+                            skipped += 1
+                    else:
+                        skipped += 1
+
+                elif issue_type in ("brand_drift", "seo", "content"):
+                    # These require human judgment — log for manual review
+                    manual_needed.append({
+                        "url": url,
+                        "type": issue_type,
+                        "message": issue.get("message", ""),
+                    })
+                    skipped += 1
+
+            # Push updated content to WordPress if modified
+            if modified_content != current_content:
+                try:
+                    update_data = {"content": modified_content}
+                    if wp_type == "page":
+                        self.wp.update_page(item_id, update_data)
+                    elif wp_type == "post":
+                        self.wp.update_post(item_id, update_data)
+                    elif wp_type == "product":
+                        self.wp.update_product(item_id, update_data)
+                    logger.info(f"Updated {wp_type} {item_id} on WordPress")
+                except Exception as e:
+                    logger.error(f"Failed to update {wp_type} {item_id}: {e}")
+
+        # Purge cache after applying changes
+        if applied > 0:
+            self.wp.purge_litespeed_cache()
+
+        # Log summary
+        logger.info(f"Corrections applied: {applied}, skipped: {skipped}, "
+                     f"manual review needed: {len(manual_needed)}")
+
+        if manual_needed:
+            logger.info("The following issues require manual intervention:")
+            for item in manual_needed:
+                logger.info(f"  [{item['type']}] {item['url']}: {item['message']}")
+
+        update_section("content_audit", status="applied",
+                       applied_count=applied, skipped_count=skipped,
+                       manual_review=len(manual_needed))
 
 
 def run_agent(config: dict = None):
