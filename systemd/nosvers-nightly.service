@@ -1,0 +1,12 @@
+[Unit]
+Description=NosVers Agent Ecosystem — Nightly Audit Run
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/user/creatusagentesia
+ExecStart=/home/user/creatusagentesia/nightly_run.sh
+User=angel
+StandardOutput=append:/home/user/creatusagentesia/logs/systemd_nightly.log
+StandardError=append:/home/user/creatusagentesia/logs/systemd_nightly.log
