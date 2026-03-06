@@ -139,19 +139,23 @@ class PhotoManager:
 
     def _check_orphaned_media(self, media_items: list, pages: list, posts: list, products: list):
         """Detect media items not used in any page, post, or product."""
-        # Collect all content HTML once and build featured_media set
         all_items = pages + posts + products
-        all_content = " ".join(
-            item.get("content", {}).get("rendered", "")
-            for item in all_items
-        )
         featured_ids = {item.get("featured_media") for item in all_items}
+
+        # Build a single set of all content strings for fast substring checks
+        content_parts = []
+        for item in all_items:
+            content_parts.append(item.get("content", {}).get("rendered", ""))
+        all_content = " ".join(content_parts)
 
         # Check each media item
         for media in media_items:
             source_url = media.get("source_url", "")
             media_id = media["id"]
             filename = os.path.basename(source_url)
+
+            if not source_url:
+                continue
 
             # Check if referenced in any content or as featured image
             is_featured = media_id in featured_ids

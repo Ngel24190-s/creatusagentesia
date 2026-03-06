@@ -45,8 +45,13 @@ class WPClient:
                     logger.error(f"Connection failed after {retries} attempts: {e}")
                     raise
             except requests.exceptions.HTTPError as e:
-                logger.error(f"HTTP error {resp.status_code} for {url}: {e}")
-                raise
+                if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
+                    wait = 2 ** (attempt + 1)
+                    logger.warning(f"HTTP {resp.status_code} (attempt {attempt + 1}), retrying in {wait}s: {e}")
+                    time.sleep(wait)
+                else:
+                    logger.error(f"HTTP error {resp.status_code} for {url}: {e}")
+                    raise
 
     def _get_all_paginated(self, endpoint: str, params: dict = None) -> list:
         """Fetch all items from a paginated WP REST API endpoint."""

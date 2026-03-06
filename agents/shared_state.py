@@ -40,10 +40,11 @@ def load_state() -> dict:
     return _default_state()
 
 
-def save_state(state: dict):
+def save_state(state: dict, update_timestamp: bool = True):
     """Persist shared state to JSON file."""
     path = _state_path()
-    state["last_run"] = datetime.now(timezone.utc).isoformat()
+    if update_timestamp:
+        state["last_run"] = datetime.now(timezone.utc).isoformat()
     with open(path, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
 
@@ -60,6 +61,8 @@ def update_section(section: str, **kwargs):
 def add_blocker(description: str, agent: str):
     """Add a blocker that requires human attention."""
     state = load_state()
+    if "blockers" not in state or not isinstance(state["blockers"], list):
+        state["blockers"] = []
     state["blockers"].append({
         "description": description,
         "agent": agent,
@@ -72,4 +75,4 @@ def clear_blockers():
     """Clear all resolved blockers."""
     state = load_state()
     state["blockers"] = []
-    save_state(state)
+    save_state(state, update_timestamp=False)

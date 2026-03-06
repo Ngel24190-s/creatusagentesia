@@ -112,11 +112,13 @@ class TelegramNotifier:
         current = ""
 
         for line in lines:
-            if len(current) + len(line) + 1 > max_len:
+            if current and len(current) + len(line) + 1 > max_len:
                 chunks.append(current)
                 current = line
+            elif not current:
+                current = line
             else:
-                current = f"{current}\n{line}" if current else line
+                current = f"{current}\n{line}"
 
         if current:
             chunks.append(current)

@@ -66,6 +66,7 @@ class ContentGuardian:
             if m.ruleId in ("WHITESPACE_RULE", "UNPAIRED_BRACKETS"):
                 continue
             snippet = text[max(0, m.offset - 30):m.offset + m.errorLength + 30]
+            error_text = text[m.offset:m.offset + m.errorLength]
             self.issues.append({
                 "url": source_url,
                 "type": source_type,
@@ -73,6 +74,7 @@ class ContentGuardian:
                 "rule": m.ruleId,
                 "message": m.message,
                 "original": snippet,
+                "error_text": error_text,
                 "suggestion": m.replacements[:3] if m.replacements else [],
             })
 
@@ -80,9 +82,12 @@ class ContentGuardian:
         """Check for forbidden phrases and brand drift."""
         text_lower = text.lower()
         for phrase in self.forbidden:
-            if phrase.lower() in text_lower:
-                # Find the snippet around the forbidden phrase
-                idx = text_lower.index(phrase.lower())
+            phrase_lower = phrase.lower()
+            start = 0
+            while True:
+                idx = text_lower.find(phrase_lower, start)
+                if idx == -1:
+                    break
                 snippet = text[max(0, idx - 40):idx + len(phrase) + 40]
                 self.issues.append({
                     "url": source_url,
@@ -92,6 +97,7 @@ class ContentGuardian:
                     "original": snippet,
                     "suggestion": "Remplacer par une formulation enracinée dans l'expérience réelle de la ferme.",
                 })
+                start = idx + len(phrase)
 
     def _check_seo(self, html: str, title: str, source_url: str, source_type: str):
         """Check SEO structure and keyword presence."""
@@ -339,19 +345,17 @@ class ContentGuardian:
                 issue_type = issue.get("issue_type", "")
 
                 if issue_type == "grammar":
-                    # Apply grammar fix: replace the error with the first suggestion
+                    # Apply grammar fix: replace the actual error text with the first suggestion
                     suggestions = issue.get("suggestion", [])
-                    original = issue.get("original", "")
-                    if suggestions and original:
-                        # The original is a snippet with context; find the actual error
-                        # by matching the snippet in content
+                    error_text = issue.get("error_text", "")
+                    if suggestions and error_text:
                         first_fix = suggestions[0] if isinstance(suggestions, list) else suggestions
-                        if original in modified_content:
-                            modified_content = modified_content.replace(original, first_fix, 1)
+                        if error_text in modified_content:
+                            modified_content = modified_content.replace(error_text, first_fix, 1)
                             applied += 1
-                            logger.info(f"Applied grammar fix on {url}: '{original[:40]}...' → '{first_fix[:40]}...'")
+                            logger.info(f"Applied grammar fix on {url}: '{error_text[:40]}' → '{first_fix[:40]}'")
                         else:
-                            logger.debug(f"Snippet not found in content for {url}, skipping")
+                            logger.debug(f"Error text not found in content for {url}, skipping")
                             skipped += 1
                     else:
                         skipped += 1

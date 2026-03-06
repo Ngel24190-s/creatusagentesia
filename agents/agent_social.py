@@ -245,7 +245,7 @@ class SocialMediaManager:
             logger.info(f"Processing content seed: {filename}")
 
             # Treat seed as a generic behind-the-scenes item
-            lines = seed_text.split("\n")
+            lines = [l for l in seed_text.split("\n") if l.strip()]
             title = lines[0][:80] if lines else "Note de la ferme"
             body = " ".join(lines[1:]) if len(lines) > 1 else seed_text
 
