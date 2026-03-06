@@ -20,13 +20,16 @@ from agents.config_loader import load_config
 
 def _load_json(path):
     if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, ValueError):
+            print(f"Warning: corrupt JSON file, skipping: {path}")
     return None
 
 
 def _escape(text):
-    return (text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return (text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
 def generate_dashboard():
@@ -49,7 +52,7 @@ def generate_dashboard():
     sq = state.get("social_queue", {})
     blockers = state.get("blockers", [])
 
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     # Group content issues by type
     content_by_type = {}
@@ -192,9 +195,10 @@ tr:hover {{ background: #334155; }}
             itype = c.get("issue_type", "")
             tag_class = {"grammar": "grammar", "brand_drift": "brand", "seo": "seo", "content": "content"}.get(itype, "")
             tag_label = {"grammar": "Grammaire", "brand_drift": "Marque", "seo": "SEO", "content": "Contenu"}.get(itype, itype)
-            url = _escape(c.get("url", ""))
-            parts = [p for p in url.split("/") if p]
-            short_url = parts[-1] if parts else url
+            raw_url = c.get("url", "")
+            url = _escape(raw_url)
+            parts = [p for p in raw_url.split("/") if p]
+            short_url = _escape(parts[-1]) if parts else url
             msg = _escape(c.get("message", ""))
             original = _escape(str(c.get("original", ""))[:80])
             suggestion = c.get("suggestion", "")
@@ -202,7 +206,7 @@ tr:hover {{ background: #334155; }}
                 suggestion = " / ".join(suggestion[:3])
             suggestion = _escape(str(suggestion)[:100])
             html += f'<tr><td><span class="tag {tag_class}">{tag_label}</span></td>'
-            html += f'<td><a href="{url}" style="color:#3b82f6" target="_blank">{_escape(short_url)}</a></td>'
+            html += f'<td><a href="{url}" style="color:#3b82f6" target="_blank">{short_url}</a></td>'
             html += f'<td>{msg}</td><td class="snippet">{original}</td>'
             html += f'<td class="suggestion">{suggestion}</td></tr>'
         html += '</tbody></table>'

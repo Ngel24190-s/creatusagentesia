@@ -34,3 +34,6 @@ python dashboard.py --no-open >> "$LOGFILE" 2>&1 || true
 
 echo "[$(date +%H:%M:%S)] Nightly run complete." >> "$LOGFILE"
 echo "=======================================" >> "$LOGFILE"
+
+# Clean up log files older than 30 days
+find "$LOG_DIR" -name "nightly_*.log" -mtime +30 -delete 2>/dev/null || true

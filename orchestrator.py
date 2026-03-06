@@ -296,7 +296,7 @@ class Orchestrator:
             msg = MIMEMultipart()
             msg["From"] = email_cfg["from_address"]
             msg["To"] = ", ".join(email_cfg["to_addresses"])
-            msg["Subject"] = f"NosVers — Rapport Hebdomadaire {datetime.now().strftime('%Y-%m-%d')}"
+            msg["Subject"] = f"NosVers — Rapport Hebdomadaire {datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
             msg.attach(MIMEText(report_content, "plain", "utf-8"))
 
             with smtplib.SMTP(email_cfg["smtp_host"], email_cfg["smtp_port"]) as server:
