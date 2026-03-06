@@ -29,9 +29,8 @@ python orchestrator.py --run-all >> "$LOGFILE" 2>&1 || true
 echo "[$(date +%H:%M:%S)] Generating dashboard..." >> "$LOGFILE"
 python dashboard.py --no-open >> "$LOGFILE" 2>&1 || true
 
-# Send Telegram notification
-echo "[$(date +%H:%M:%S)] Sending notification..." >> "$LOGFILE"
-python orchestrator.py --notify >> "$LOGFILE" 2>&1 || true
+# Note: --run-all already sends a Telegram notification via notifier,
+# so we skip the separate --notify call to avoid duplicate messages.
 
 echo "[$(date +%H:%M:%S)] Nightly run complete." >> "$LOGFILE"
 echo "=======================================" >> "$LOGFILE"

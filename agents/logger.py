@@ -27,6 +27,10 @@ def get_logger(name: str = "nosvers") -> logging.Logger:
     _logger = logging.getLogger("nosvers")
     _logger.setLevel(log_level)
 
+    # Prevent duplicate handlers if getLogger returns an existing logger
+    if _logger.handlers:
+        return _logger.getChild(name) if name != "nosvers" else _logger
+
     # File handler
     fh = logging.FileHandler(log_file, encoding="utf-8")
     fh.setLevel(log_level)

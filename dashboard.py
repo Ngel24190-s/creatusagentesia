@@ -193,7 +193,8 @@ tr:hover {{ background: #334155; }}
             tag_class = {"grammar": "grammar", "brand_drift": "brand", "seo": "seo", "content": "content"}.get(itype, "")
             tag_label = {"grammar": "Grammaire", "brand_drift": "Marque", "seo": "SEO", "content": "Contenu"}.get(itype, itype)
             url = _escape(c.get("url", ""))
-            short_url = url.split("/")[-1] or url.split("/")[-2] if "/" in url else url
+            parts = [p for p in url.split("/") if p]
+            short_url = parts[-1] if parts else url
             msg = _escape(c.get("message", ""))
             original = _escape(str(c.get("original", ""))[:80])
             suggestion = c.get("suggestion", "")

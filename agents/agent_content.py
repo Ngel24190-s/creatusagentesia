@@ -8,21 +8,14 @@ import os
 import re
 import json
 from datetime import datetime, timezone
-from html import unescape
 
+from agents import strip_html as _strip_html
 from agents.config_loader import load_config
 from agents.logger import get_logger
 from agents.wp_client import WPClient
 from agents.shared_state import update_section, add_blocker
 
 logger = get_logger("content_guardian")
-
-
-def _strip_html(html: str) -> str:
-    """Remove HTML tags and decode entities."""
-    text = re.sub(r"<[^>]+>", " ", html)
-    text = unescape(text)
-    return re.sub(r"\s+", " ", text).strip()
 
 
 def _extract_headings(html: str) -> list:

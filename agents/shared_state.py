@@ -29,8 +29,14 @@ def load_state() -> dict:
     """Load shared state from JSON file, or return default."""
     path = _state_path()
     if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, ValueError):
+            # Corrupt state file — back it up and start fresh
+            backup = path + ".corrupt"
+            os.replace(path, backup)
+            return _default_state()
     return _default_state()
 
 

@@ -124,6 +124,10 @@ class Orchestrator:
         print("\nNosVers Agent Ecosystem — Full Run")
         print("=" * 50)
 
+        # Clear stale blockers from previous runs
+        from agents.shared_state import clear_blockers
+        clear_blockers()
+
         # Step 1: Content audit
         print("\n[1/3] Content Guardian (Gardien du Contenu)...")
         try:
@@ -148,15 +152,12 @@ class Orchestrator:
             logger.error(f"Social Media Manager failed: {e}")
             print(f"  ERROR: {e}")
 
-        # Save final state
-        state = load_state()
-        save_state(state)
-
         print("\n" + "=" * 50)
         print("Run complete. Check reports/ for all outputs.")
         print("Review and approve in shared_state.json before applying changes.\n")
 
         # Send Telegram notification
+        state = load_state()
         self.notifier.send_report_summary(state)
 
         logger.info("Full run complete")

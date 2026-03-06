@@ -36,7 +36,7 @@ class WPClient:
                 resp = self.session.request(method, url, timeout=30, **kwargs)
                 resp.raise_for_status()
                 return resp
-            except requests.exceptions.ConnectionError as e:
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
                 if attempt < retries - 1:
                     wait = 2 ** (attempt + 1)
                     logger.warning(f"Connection error (attempt {attempt + 1}), retrying in {wait}s: {e}")
