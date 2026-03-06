@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NosVers — Dashboard Agent Ecosystem</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
+.header { background: linear-gradient(135deg, #1e3a2f 0%, #2d1b3d 100%); padding: 2rem; text-align: center; border-bottom: 3px solid #22c55e; }
+.header h1 { font-size: 2rem; color: #22c55e; margin-bottom: 0.5rem; }
+.header .subtitle { color: #94a3b8; font-size: 0.9rem; }
+.container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+/* Summary cards */
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.card { background: #1e293b; border-radius: 12px; padding: 1.5rem; border-left: 4px solid #3b82f6; }
+.card.green { border-left-color: #22c55e; }
+.card.orange { border-left-color: #f59e0b; }
+.card.red { border-left-color: #ef4444; }
+.card.purple { border-left-color: #a855f7; }
+.card h3 { color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
+.card .number { font-size: 2.5rem; font-weight: 700; color: #f8fafc; }
+.card .status { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-top: 0.5rem; }
+.status.pending { background: #f59e0b22; color: #f59e0b; }
+.status.draft { background: #3b82f622; color: #3b82f6; }
+.status.applied { background: #22c55e22; color: #22c55e; }
+
+/* Sections */
+.section { background: #1e293b; border-radius: 12px; margin-bottom: 1.5rem; overflow: hidden; }
+.section-header { padding: 1rem 1.5rem; background: #334155; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.section-header h2 { font-size: 1.1rem; color: #f8fafc; }
+.section-header .badge { background: #ef4444; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; }
+.section-body { padding: 1.5rem; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 0.75rem; color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; border-bottom: 1px solid #334155; }
+td { padding: 0.75rem; border-bottom: 1px solid #1e293b44; font-size: 0.9rem; vertical-align: top; }
+tr:hover { background: #334155; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+.tag.grammar { background: #3b82f622; color: #3b82f6; }
+.tag.brand { background: #ef444422; color: #ef4444; }
+.tag.seo { background: #f59e0b22; color: #f59e0b; }
+.tag.content { background: #a855f722; color: #a855f7; }
+.tag.alt { background: #06b6d422; color: #06b6d4; }
+.tag.filename { background: #8b5cf622; color: #8b5cf6; }
+.tag.resolution { background: #f9731622; color: #f97316; }
+.tag.orphaned { background: #64748b22; color: #64748b; }
+.suggestion { color: #22c55e; font-style: italic; }
+.snippet { color: #94a3b8; font-family: monospace; font-size: 0.8rem; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Social posts */
+.social-post { background: #0f172a; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; border: 1px solid #334155; }
+.social-post h4 { color: #f8fafc; margin-bottom: 0.5rem; }
+.social-post .meta { color: #64748b; font-size: 0.8rem; margin-bottom: 1rem; }
+.platforms { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+.platform { background: #1e293b; border-radius: 8px; padding: 1rem; }
+.platform h5 { margin-bottom: 0.5rem; }
+.platform h5.ig { color: #e1306c; }
+.platform h5.fb { color: #1877f2; }
+.platform h5.tk { color: #00f2ea; }
+.platform pre { white-space: pre-wrap; font-size: 0.8rem; color: #cbd5e1; font-family: inherit; line-height: 1.5; }
+
+/* Blockers */
+.blocker { background: #ef444422; border: 1px solid #ef4444; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; }
+.no-issues { color: #22c55e; text-align: center; padding: 2rem; font-size: 1.1rem; }
+
+.footer { text-align: center; padding: 2rem; color: #475569; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>NosVers Agent Ecosystem</h1>
+    <div class="subtitle">Dashboard — 2026-03-06 21:32 | Dernier run : 2026-03-06T21:32:14.396636+00:00</div>
+</div>
+
+<div class="container">
+
+<!-- Summary Cards -->
+<div class="summary">
+    <div class="card orange">
+        <h3>Anomalies Contenu</h3>
+        <div class="number">0</div>
+        <span class="status pending">pending</span>
+    </div>
+    <div class="card red">
+        <h3>Anomalies Medias</h3>
+        <div class="number">0</div>
+        <span class="status pending">pending</span>
+    </div>
+    <div class="card purple">
+        <h3>Posts Sociaux</h3>
+        <div class="number">1</div>
+        <span class="status draft">draft</span>
+    </div>
+    <div class="card green">
+        <h3>Photos Necessaires</h3>
+        <div class="number">0</div>
+        <span class="status pending">ok</span>
+    </div>
+</div>
+<div class="section"><div class="section-header"><h2>Blocages</h2><span class="badge">2</span></div><div class="section-body"><div class="blocker"><strong>[content_guardian]</strong> Cannot fetch pages from WP API: HTTPSConnectionPool(host='nosvers.com', port=443): Max retries exceeded with url: /wp-json/wp/v2/pages?status=publish&amp;per_page=100&amp;page=1 (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))</div><div class="blocker"><strong>[photo_manager]</strong> Cannot fetch media from WP API: HTTPSConnectionPool(host='nosvers.com', port=443): Max retries exceeded with url: /wp-json/wp/v2/media?per_page=100&amp;page=1 (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))</div></div></div>
+<div class="section">
+    <div class="section-header">
+        <h2>Audit du Contenu</h2>
+        <span class="badge">0 anomalies</span>
+    </div>
+    <div class="section-body">
+<div class="no-issues">Aucune anomalie de contenu detectee</div></div></div>
+<div class="section">
+    <div class="section-header">
+        <h2>Audit des Medias</h2>
+        <span class="badge">0 anomalies</span>
+    </div>
+    <div class="section-body">
+<div class="no-issues">Aucune anomalie media detectee</div></div></div>
+<div class="section">
+    <div class="section-header">
+        <h2>File d'Attente Reseaux Sociaux</h2>
+        <span class="badge">1 posts</span>
+    </div>
+    <div class="section-body">
+<div class="social-post"><h4>1. Récolte de printemps 2026</h4><div class="meta">Type: education | Source: https://nosvers.com | Statut: a valider</div><div class="platforms"><div class="platform"><h5 class="ig">Instagram</h5><pre>Récolte de printemps 2026
+
+Aujourd'hui on a récolté notre premier lot de lombricompost de la saison. Les vers ont travaillé tout l'hiver et le résultat est magnifique. 200kg de lombricompost pur, riche en micro-organismes bénéfiques. Angel et Africa sont fiers du travail accompli à la ferme.
+
+
+Posez vos questions en commentaire !
+
+
+#lombricompost #LombriThé #compost #ferme #NosVers</pre></div><div class="platform"><h5 class="fb">Facebook</h5><pre>Récolte de printemps 2026
+
+On vous explique ce que ça veut dire concrètement, depuis notre expérience sur le terrain.
+
+Aujourd'hui on a récolté notre premier lot de lombricompost de la saison. Les vers ont travaillé tout l'hiver et le résultat est magnifique. 200kg de lombricompost pur, riche en micro-organismes bénéfiques. Angel et Africa sont fiers du travail accompli à la ferme. Prochaine étape : préparer le LombriThé pour les clients du printemps.
+
+
+Posez vos questions en commentaire !</pre></div><div class="platform"><h5 class="tk">TikTok / Reels</h5><pre>HOOK (3 premières secondes) : « Ce que personne ne vous dit sur le sol de votre jardin. »
+
+CORPS : Aujourd'hui on a récolté notre premier lot de lombricompost de la saison.
+Ici à NosVers, en Dordogne, on travaille avec des millions de vers pour créer le meilleur amendement naturel possible.
+
+FIN : Posez vos questions en commentaire !</pre></div></div></div></div></div>
+</div>
+<div class="footer">
+    NosVers Agent Ecosystem v1.0 — Genere le 2026-03-06 21:32<br>
+    Pour approuver les corrections, editez <code>shared_state.json</code> et changez les statuts en "approved".
+</div>
+</body>
+</html>
